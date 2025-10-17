@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     tags: ['*']                 # allow tag-triggered releases
     paths:
-      - "hassio-ihost-hardware-control/**"
+      - "**"
       - ".github/workflows/publish.yml"
   workflow_dispatch:
 
@@ -30,10 +30,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ha_arch: aarch64
-            platform: linux/arm64
-          - ha_arch: amd64
-            platform: linux/amd64
+          #- ha_arch: aarch64
+          #  platform: linux/arm64
+          #- ha_arch: amd64
+          #  platform: linux/amd64
           - ha_arch: armv7
             platform: linux/arm/v7
 
