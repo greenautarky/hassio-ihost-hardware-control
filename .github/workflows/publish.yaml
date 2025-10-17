@@ -20,7 +20,7 @@ permissions:
 env:
   IMAGE_NS: ghcr.io/greenautarky
   ADDON_SLUG: ga_ihosthardwarecontrol        # underscore kept as requested
-  ADDON_DIR: "" #uses root 
+  ADDON_DIR: "" #uses root
   BASE_VERSION: 18.1.4          # single, no-`v` scheme for all arches
 
 jobs:
@@ -50,15 +50,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Minimal change: read version from config.json (jq is available on ubuntu-latest)
+      # Minimal change: read version from config.yaml (fallback to config.json)
       - name: Read add-on version
         id: ver
         shell: bash
         run: |
           set -euo pipefail
-          ver=$(jq -r '.version // empty' config.json)
-          if [ -z "${ver:-}" ]; then
-            echo "::error::Could not read .version from config.json"
+          ver=""
+          if [[ -f config.yaml ]]; then
+            # Extract the first "version: ..." (handles quotes & spaces)
+            ver=$(sed -nE 's/^[[:space:]]*version:[[:space:]]*"?([^"#]+)"?.*$/\1/p' config.yaml | head -n1 | xargs || true)
+          fi
+          if [[ -z "${ver}" && -f config.json ]]; then
+            # Fallback if someone still has the json around
+            ver=$(jq -r '.version // empty' config.json || true)
+          fi
+          if [[ -z "${ver}" ]]; then
+            echo "::error::Could not read version from config.yaml (or config.json as fallback)"
             exit 1
           fi
           echo "Detected add-on version: $ver"
