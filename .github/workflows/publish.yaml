@@ -2,11 +2,11 @@ name: Build & Push (GHCR) - ga_ihosthardwarecontrol
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     tags: ['*']                 # allow tag-triggered releases
     paths:
       - "**"
-      - ".github/workflows/publish.yml"
+      - ".github/workflows/publish.yaml"
   workflow_dispatch:
 
 concurrency:
@@ -30,10 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- ha_arch: aarch64
-          #  platform: linux/arm64
-          #- ha_arch: amd64
-          #  platform: linux/amd64
           - ha_arch: armv7
             platform: linux/arm/v7
 
@@ -54,34 +50,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Read add-on version from glances/config.yaml (supports quoted/unquoted, ignores comments)
+      # Minimal change: read version from config.json (jq is available on ubuntu-latest)
       - name: Read add-on version
         id: ver
         shell: bash
         run: |
           set -euo pipefail
-          f="${{ env.ADDON_DIR }}/config.yaml"
-
-          echo ">>> Looking for 'version:' in $f"
-          grep -n -i '^[[:space:]]*version[[:space:]]*:' "$f" || true
-
-          ver=$(
-            awk 'BEGIN{IGNORECASE=1}
-              /^[[:space:]]*version[[:space:]]*:/{
-                sub(/^.*version[[:space:]]*:[[:space:]]*/,"");
-                sub(/[[:space:]]*#.*/,"");
-                gsub(/"/,"");
-                gsub(/[[:space:]]/,"");
-                print; exit
-              }' "$f"
-          )
-
+          ver=$(jq -r '.version // empty' config.json)
           if [ -z "${ver:-}" ]; then
-            echo "::error::Could not read version from $f"
-            nl -ba "$f" | sed -n '1,60p'
+            echo "::error::Could not read .version from config.json"
             exit 1
           fi
-
           echo "Detected add-on version: $ver"
           echo "value=$ver" >> "$GITHUB_OUTPUT"
 
@@ -103,11 +82,7 @@ jobs:
         id: base
         shell: bash
         run: |
-          img="ghcr.io/hassio-addons/base/${{ matrix.ha_arch }}:${{ env.BASE_VERSION }}"
-          # armv7 uses an explicit path segment; keep consistent
-          if [ "${{ matrix.ha_arch }}" = "armv7" ]; then
-            img="ghcr.io/hassio-addons/base/armv7:${{ env.BASE_VERSION }}"
-          fi
+          img="ghcr.io/hassio-addons/base/armv7:${{ env.BASE_VERSION }}"
           echo "img=$img" >> "$GITHUB_OUTPUT"
           echo "Using base: $img"
 
