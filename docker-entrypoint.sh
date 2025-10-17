@@ -46,21 +46,22 @@ bashio::log.info "npm version: $(npm --version)"
 
 if ! bashio::services.available "mqtt"; then
     bashio::log.warning "MQTT service not found!"
-    bashio::log.info "Installing Mosquitto Addon..."
-    if ! bashio::addon.install "core_mosquitto"; then 
-        bashio::log.fatal "Mosquitto Addon fail"
-    fi
-    bashio::log.info "Mosquitto Addon install success"
+    #bashio::log.info "Installing Mosquitto Addon..." #TODO add proper failure handling
+    #if ! bashio::addon.install "core_mosquitto"; then 
+    #    bashio::log.fatal "Mosquitto Addon fail"
+    #fi
+    #bashio::log.info "Mosquitto Addon install success"
     # sleep 20
-    bashio::addons.reload
-    bashio::log.info "Mosquitto Addon start..."
+    #bashio::addons.reload
+    #bashio::log.info "Mosquitto Addon start..."
 fi
 
-STATE=$(bashio::addon.state "core_mosquitto")
+#STATE=$(bashio::addon.state "core_mosquitto")
+STATE=$(bashio::addon.state "addon_009f61ec_ga_mosquitto")
 
 if [[ $STATE != "started" ]]; then
-    bashio::log.warning "Mosquitto not running, current state: $(bashio::addon.state "core_mosquitto")"
-    bashio::addon.start "core_mosquitto"
+    bashio::log.warning "Mosquitto not running, current state: $(bashio::addon.state "core_mosquiaddon_009f61ec_ga_mosquittotto")"
+    ##bashio::addon.start "addon_009f61ec_ga_mosquitto" //TODO Handle via VOS Manager ?
     bashio::addons.reload
     sleep 20
 fi
