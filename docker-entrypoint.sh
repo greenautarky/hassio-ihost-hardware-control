@@ -1,15 +1,32 @@
 #!/usr/bin/env bashio
 set -euo pipefail
 
-# Default to warning if the user did not set anything
 LOG_LEVEL="warning"
 if bashio::config.has_value 'log_level'; then
   LOG_LEVEL="$(bashio::config 'log_level')"
 fi
 
-bashio::log.level "$LOG_LEVEL"
+# Map to log4js style
+case "$LOG_LEVEL" in
+  warning) LOG_LEVEL="WARN" ;;
+  warn)    LOG_LEVEL="WARN" ;;
+  info)    LOG_LEVEL="INFO" ;;
+  debug)   LOG_LEVEL="DEBUG" ;;
+  error)   LOG_LEVEL="ERROR" ;;
+  critical) LOG_LEVEL="FATAL" ;; # optional; log4js supports FATAL
+esac
+
+export LOG_LEVEL
+
 bashio::log.debug "Bashio log level is set to: $LOG_LEVEL"
 
+
+#map to Node-style level names
+APP_LOG_LEVEL="$LOG_LEVEL"
+if [[ "$APP_LOG_LEVEL" == "warning" ]]; then
+  APP_LOG_LEVEL="warn"
+fi
+export LOG_LEVEL="$APP_LOG_LEVEL"
 
 # Check whether it is launched in an iHost environment
 bashio::log.info "os info: "

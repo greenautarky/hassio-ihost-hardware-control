@@ -4,15 +4,26 @@ import config from '../config/config';
 import fs from "fs";
 
 interface LogConfig {
-    logLevel: string; // ALL、DEBUG、INFO、WARN、ERROR、OFF。
-    logDirPath?: string;
-    logMaxSize?: number;
+  logLevel: string; // ALL、DEBUG、INFO、WARN、ERROR、OFF。
+  logDirPath?: string;
+  logMaxSize?: number;
 }
 
+// Map common values ("warning" -> "WARN") and normalize
+function normalizeLevel(input?: string): string {
+  const v = (input || '').trim().toUpperCase();
+  if (!v) return 'WARN';
+  if (v === 'WARNING') return 'WARN';
+  return v;
+}
+
+// Read from env (set this from your add-on run script)
+const envLogLevel = normalizeLevel(process.env.LOG_LEVEL);
+
 const defaultSystemLogConfig: LogConfig = {
-    logLevel: 'INFO',
-    logDirPath: config.LOGGER_CONFIG.path,
-    logMaxSize: 1024 * 5,
+  logLevel: envLogLevel || 'WARN',          // <-- changed default + env override
+  logDirPath: config.LOGGER_CONFIG.path,
+  logMaxSize: 1024 * 5,
 };
 
 if (!fs.existsSync(config.LOGGER_CONFIG.path)) {
