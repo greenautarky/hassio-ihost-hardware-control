@@ -57,10 +57,11 @@ if ! bashio::services.available "mqtt"; then
 fi
 
 #STATE=$(bashio::addon.state "core_mosquitto")
-STATE=$(bashio::addon.state "addon_009f61ec_ga_mosquitto")
+STATE=$(bashio::addon.state "addon_99f1cad4_ga_mosquitto")
+
 
 if [[ $STATE != "started" ]]; then
-    bashio::log.warning "Mosquitto not running, current state: $(bashio::addon.state "core_mosquiaddon_009f61ec_ga_mosquittotto")"
+    bashio::log.warning "Mosquitto not running, current state: $(bashio::addon.state "addon_99f1cad4_ga_mosquitto")"
     ##bashio::addon.start "addon_009f61ec_ga_mosquitto" //TODO Handle via VOS Manager ?
     bashio::addons.reload
     sleep 20
