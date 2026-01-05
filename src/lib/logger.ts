@@ -52,7 +52,8 @@ const createLoggerOptions = (config: LogConfig) => {
       ihostHa: {
         type: 'file',
         filename: path.join(config.logDirPath ?? "", 'ihost_ha.log'),
-        maxLogSize: `${config.logMaxSize}K`,
+        // MINIMAL FIX 1: avoid "undefinedK"
+        maxLogSize: `${(config.logMaxSize ?? defaultSystemLogConfig.logMaxSize)}K`,
         backups: 1,
         compress: true,
         layout: {
@@ -80,21 +81,16 @@ const _logger: log4js.Logger = log4js.getLogger();
 
 // update logger configs
 function updateLogConfig(level: string, logDirPath?: string, logMaxSize?: number) {
+  // MINIMAL FIX 2: keep existing values when args are omitted
   const newConfig: LogConfig = {
-    logLevel: normalizeLevel(level), // minimal: keep consistent with env normalization
-    logDirPath,
-    logMaxSize,
+    logLevel: normalizeLevel(level),
+    logDirPath: logDirPath ?? runtimeLoggerInformation.logDirPath,
+    logMaxSize: logMaxSize ?? runtimeLoggerInformation.logMaxSize,
   };
 
-  if (runtimeLoggerInformation.logLevel != null) {
-    runtimeLoggerInformation.logLevel = newConfig.logLevel;
-  }
-  if (runtimeLoggerInformation.logDirPath != null) {
-    runtimeLoggerInformation.logDirPath = logDirPath;
-  }
-  if (runtimeLoggerInformation.logMaxSize != null) {
-    runtimeLoggerInformation.logMaxSize = logMaxSize;
-  }
+  runtimeLoggerInformation.logLevel = newConfig.logLevel;
+  runtimeLoggerInformation.logDirPath = newConfig.logDirPath;
+  runtimeLoggerInformation.logMaxSize = newConfig.logMaxSize;
 
   // shutdown logger
   log4js.shutdown();

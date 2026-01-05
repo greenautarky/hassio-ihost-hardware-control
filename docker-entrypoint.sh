@@ -1,6 +1,11 @@
 #!/usr/bin/env bashio
 set -euo pipefail
 
+
+: "${LOG_LEVEL:=WARN}"
+export LOG_LEVEL
+
+
 # Read add-on option (lowercase for bashio)
 BASHIO_LEVEL="warning"
 if bashio::config.has_value 'log_level'; then
