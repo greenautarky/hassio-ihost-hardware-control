@@ -1,32 +1,27 @@
 #!/usr/bin/env bashio
 set -euo pipefail
 
-LOG_LEVEL="warning"
+# Read add-on option (lowercase for bashio)
+BASHIO_LEVEL="warning"
 if bashio::config.has_value 'log_level'; then
-  LOG_LEVEL="$(bashio::config 'log_level')"
+  BASHIO_LEVEL="$(bashio::config 'log_level')"
 fi
 
-# Map to log4js style
-case "$LOG_LEVEL" in
-  warning) LOG_LEVEL="WARN" ;;
-  warn)    LOG_LEVEL="WARN" ;;
-  info)    LOG_LEVEL="INFO" ;;
-  debug)   LOG_LEVEL="DEBUG" ;;
-  error)   LOG_LEVEL="ERROR" ;;
-  critical) LOG_LEVEL="FATAL" ;; # optional; log4js supports FATAL
-esac
+# Apply bashio log filter
+bashio::log.level "$BASHIO_LEVEL"
 
+# Map to log4js style for Node (uppercase)
+case "$BASHIO_LEVEL" in
+  debug)    LOG_LEVEL="DEBUG" ;;
+  info)     LOG_LEVEL="INFO" ;;
+  warning|warn) LOG_LEVEL="WARN" ;;
+  error)    LOG_LEVEL="ERROR" ;;
+  critical|fatal) LOG_LEVEL="FATAL" ;;
+  *)        LOG_LEVEL="WARN" ;;
+esac
 export LOG_LEVEL
 
-bashio::log.debug "Bashio log level is set to: $LOG_LEVEL"
-
-
-#map to Node-style level names
-APP_LOG_LEVEL="$LOG_LEVEL"
-if [[ "$APP_LOG_LEVEL" == "warning" ]]; then
-  APP_LOG_LEVEL="warn"
-fi
-export LOG_LEVEL="$APP_LOG_LEVEL"
+bashio::log.debug "Bashio level: $BASHIO_LEVEL; Node level: $LOG_LEVEL"
 
 # Check whether it is launched in an iHost environment
 bashio::log.info "os info: "
