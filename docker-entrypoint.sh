@@ -1,22 +1,14 @@
-#!/usr/bin/env bashio
+#!/usr/bin/with-contenv bashio
+set -euo pipefail
 
-LOG_LEVEL="$(bashio::config 'log_level')"
+# Default to warning if the user did not set anything
+LOG_LEVEL="warning"
+if bashio::config.has_value 'log_level'; then
+  LOG_LEVEL="$(bashio::config 'log_level')"
+fi
 
-level_rank() {
-  case "$1" in
-    debug) echo 10 ;;
-    info) echo 20 ;;
-    warning) echo 30 ;;
-    error) echo 40 ;;
-    critical) echo 50 ;;
-    *) echo 30 ;; # safe default
-  esac
-}
-
-log_debug()   { [[ "$(level_rank "$LOG_LEVEL")" -le 10 ]] && bashio::log.debug   "$*"; }
-log_info()    { [[ "$(level_rank "$LOG_LEVEL")" -le 20 ]] && bashio::log.info    "$*"; }
-log_warning() { [[ "$(level_rank "$LOG_LEVEL")" -le 30 ]] && bashio::log.warning "$*"; }
-log_error()   { [[ "$(level_rank "$LOG_LEVEL")" -le 40 ]] && bashio::log.error   "$*"; }
+bashio::log.level "$LOG_LEVEL"
+bashio::log.debug "Bashio log level is set to: $LOG_LEVEL"
 
 
 # Check whether it is launched in an iHost environment
