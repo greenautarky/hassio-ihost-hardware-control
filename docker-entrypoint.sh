@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bashio
+#!/usr/bin/env bashio
 set -euo pipefail
 
 # Default to warning if the user did not set anything
