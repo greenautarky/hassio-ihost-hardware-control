@@ -1,3 +1,5 @@
+> **GreenAutarky Build** — This is a customized version maintained by [GreenAutarky](https://github.com/greenautarky). Forked from [iHost-Open-Source-Project/hassio-ihost-hardware-control](https://github.com/iHost-Open-Source-Project/hassio-ihost-hardware-control). Licensed under MIT.
+
 # iHost Hardware Control Add-on (Source Code)
 
 This repository contains the **source code** for the `iHost Hardware Control` add-on, designed for use with Home Assistant running on **SONOFF iHost**.
