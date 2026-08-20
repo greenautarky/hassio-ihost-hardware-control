@@ -86,11 +86,33 @@ jobs:
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
 
+      # The base comes from build.yaml, not from a string assembled here.
+      # Until 2026-08-20 this step built the name itself, so build.yaml did not
+      # exist and the Dockerfile's own ARG default named a DIFFERENT base than
+      # the one actually used — both obvious places to look were wrong and only
+      # this step was true. Same class as ga-ops#37, MQTT and influxDBv1 the
+      # same day; all four now call one resolver, which lives in the PUBLIC
+      # vibe_addons repo so a called workflow can check it out with no
+      # cross-repo token. It FAILS rather than falling back when build.yaml
+      # omits an arch, and warns loudly when there is no build.yaml at all.
+      - name: Checkout the store repo (public — carries the base resolver)
+        uses: actions/checkout@v4
+        with:
+          repository: greenautarky/vibe_addons
+          path: .store
+
+      - name: Install PyYAML
+        run: pip install --quiet "PyYAML>=6,<7"
+
       - name: Resolve base image
         id: base
         shell: bash
         run: |
-          img="ghcr.io/hassio-addons/base/armv7:${{ env.BASE_VERSION }}"
+          set -euo pipefail
+          img=$(python3 .store/scripts/resolve_addon_base.py \
+                  --addon-dir . \
+                  --arch "${{ matrix.ha_arch }}" \
+                  --legacy-tag "${{ env.BASE_VERSION }}")
           echo "img=$img" >> "$GITHUB_OUTPUT"
           echo "Using base: $img"
 
@@ -105,5 +127,6 @@ jobs:
           build-args: |
             BUILD_FROM=${{ steps.base.outputs.img }}
             BUILD_ARCH=${{ matrix.ha_arch }}
+            BUILD_VERSION=${{ steps.ver.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
