@@ -1,0 +1,38 @@
+---
+# The base this add-on is built FROM. Until 2026-08-20 this file did not exist
+# and the base was decided in two places that disagreed with each other:
+#
+#   Dockerfile      ARG BUILD_FROM=ghcr.io/home-assistant/armv7-base:3.18
+#   publish.yaml    img="ghcr.io/hassio-addons/base/armv7:${BASE_VERSION}"   # 18.1.4
+#
+# The workflow wins, so the Dockerfile's default had never been used for a
+# shipped image — it named a different vendor lineage AND an older Alpine, and
+# nobody would have noticed. That makes this add-on the sharpest instance in the
+# fleet of a class found three other times the same day (ga-ops, MQTT,
+# influxDBv1): the pipeline keeps its own answer instead of reading a
+# declaration. Here BOTH obvious places to look were wrong and only the workflow
+# was true.
+#
+# Now there is one declaration and the workflow reads it, via the shared
+# resolver in the public vibe_addons repo.
+build_from:
+  # armv7 is the only architecture this add-on builds — it drives the physical
+  # buttons and the LED on iHost hardware, which is armv7 and nothing else.
+  #
+  # Was ghcr.io/hassio-addons/base/armv7:18.1.4 — upstream's last armv7 build of
+  # that image is 18.2.1 (2025-10-16); 19.0.0 dropped the architecture, so the
+  # tag is frozen and receives no further security updates while the fleet is
+  # hardware-locked to armv7. ga-addon-base-armv7 is that same base forked FROM
+  # a live Alpine, so `apk upgrade` at build time keeps it current. Measured on
+  # ga_manager the same day: the frozen 18.2.x line carried 21 fixable
+  # HIGH/CRITICAL against 0 on a current base.
+  #
+  # Distro delta: Alpine 3.22.1 -> 3.24.1, which moves nodejs 22.23.2 -> 24.18.1.
+  # That Node major is the real risk here and it is NOT proven locally: qemu-arm
+  # cannot execute Node's JIT for armv7 (identical rc=143 on the old base too),
+  # so this CI run is the proof, not a laptop build. What IS established
+  # read-only: @serialport/bindings-cpp@13.0.0 declares napi_versions [8] and
+  # ships a prebuilt linux-arm .node with 65 napi_* symbols and zero
+  # node_module_register — Node-API, ABI-stable across majors — so the serial
+  # path does not depend on a toolchain the image lacks.
+  armv7: ghcr.io/greenautarky/ga-addon-base-armv7:3.24
