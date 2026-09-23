@@ -130,3 +130,29 @@ jobs:
             BUILD_VERSION=${{ steps.ver.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Downstream lock-step: the PUBLIC vibe_addons store entry
+  # (ihosthardwarecontrol/) is what the Supervisor reads on the device — ports,
+  # options, schema, maps, and the version it offers. This repo was one of the
+  # last two still synced BY HAND (vibe_addons #108/#111 were literal
+  # "hand-sync" commits). This job closes that gap the same way MQTT,
+  # ga_manager, ga_default_addon, ga_hmvapp_addon and zigbee2mqtt already do.
+  # The add-on's config.yaml lives at the repo ROOT, hence addon_dir ".".
+  #
+  # Tag builds are excluded on purpose: ref_name is then the tag, not master,
+  # so only default-branch publishes sync the store devices actually read.
+  #
+  # Needs DOWNSTREAM_SYNC_PAT in this repo's Actions secrets. This repo is
+  # PUBLIC — handing it a write token to vibe_addons is a deliberate decision,
+  # taken by setting that secret. Until it is set, the called workflow FAILS
+  # loudly on its guard step — it never reports success for a sync it did not
+  # do.
+  sync-downstream:
+    needs: build
+    if: github.ref_name == github.event.repository.default_branch
+    uses: greenautarky/ga-ops/.github/workflows/addon-store-lockstep.yml@main
+    with:
+      addon_dir: "."
+      addon_slug: ga_ihosthardwarecontrol
+      store_dir: ihosthardwarecontrol
+    secrets: inherit
